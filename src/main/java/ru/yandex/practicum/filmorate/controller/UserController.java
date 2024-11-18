@@ -34,9 +34,8 @@ public class UserController {
 
     @PostMapping
     public User create(@Valid @RequestBody User user) {
-        if (user.getLogin().contains(" ")) {
-            log.error("Ошибка при добавлении юзера");
-            throw new ValidationException("Логин не может содержать пробелы");
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
         }
 
         user.setId(getNextId());

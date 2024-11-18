@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class UserControllerTest {
+
     UserController userController = new UserController();
 
     User user0 = User.builder()

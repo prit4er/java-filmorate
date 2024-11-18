@@ -33,8 +33,17 @@ public class UserController {
         } else return users.values();
     }
 
+
     @PostMapping
     public User create(@Valid @RequestBody User user) {
+        // Даже при наличии аннатаций внутри модульного класса,
+        // почему то без доп проверок в методе у меня не проходит чек стайл
+        // А точнее постман тесты
+        // Именно на логине и Birthday
+        if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" ")) {
+            log.error("Ошибка при добавлении юзера");
+            throw new ValidationException("Логин не может быть пустым и содержать пробелы");
+        }
         if (user.getBirthday() == null) {
             log.error("Ошибка при добавлении юзера");
             throw new ValidationException("Дата рождения должна быть указана");

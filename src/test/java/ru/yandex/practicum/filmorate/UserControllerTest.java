@@ -72,7 +72,7 @@ public class UserControllerTest {
         try {
             userController.create(user0);
         } catch (ValidationException e) {
-            assertEquals("Логин не может содержать пробелы", e.getMessage());
+            assertEquals("Логин не может быть пустым и содержать пробелы", e.getMessage());
         }
     }
 

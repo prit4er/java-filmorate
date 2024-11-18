@@ -39,13 +39,6 @@ public class UserController {
             log.error("Ошибка при добавлении юзера");
             throw new ValidationException("Логин не может быть пустым и содержать пробелы");
         }
-        if (user.getBirthday() == null) {
-            log.error("Ошибка при добавлении юзера");
-            throw new ValidationException("Дата рождения должна быть указана");
-        } else if (user.getBirthday().isAfter(LocalDate.now())) {
-            log.error("Ошибка при добавлении юзера");
-            throw new ValidationException("Дата рождения не может быть в будущем");
-        }
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }

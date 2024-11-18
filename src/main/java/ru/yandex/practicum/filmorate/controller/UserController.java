@@ -35,7 +35,7 @@ public class UserController {
 
 
     @PostMapping
-    public User create(@Valid @RequestBody User user) {
+    public User create(@RequestBody User user) {
         // Даже при наличии аннатаций внутри модульного класса,
         // почему то без доп проверок в методе у меня не проходит чек стайл
         // А точнее постман тесты

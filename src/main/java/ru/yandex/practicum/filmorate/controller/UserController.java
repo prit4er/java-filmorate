@@ -13,6 +13,7 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,9 +35,12 @@ public class UserController {
 
     @PostMapping
     public User create(@Valid @RequestBody User user) {
-        if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" ")) {
+        if (user.getBirthday() == null) {
             log.error("Ошибка при добавлении юзера");
-            throw new ValidationException("Логин не может быть пустым и содержать пробелы");
+            throw new ValidationException("Дата рождения должна быть указана");
+        } else if (user.getBirthday().isAfter(LocalDate.now())) {
+            log.error("Ошибка при добавлении юзера");
+            throw new ValidationException("Дата рождения не может быть в будущем");
         }
         user.setId(getNextId());
         users.put(user.getId(), user);

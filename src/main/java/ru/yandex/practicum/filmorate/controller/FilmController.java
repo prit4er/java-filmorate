@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.controller;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -36,11 +37,10 @@ public class FilmController {
 
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
-        validateReleaseDate(film);
-
         if (film.getId() == null || film.getId() <= 0) {
             film.setId(getNextId());
         }
+        validateReleaseDate(film);
         films.put(film.getId(), film);
         log.debug("Добавлен фильм с Id {}", film.getId());
         return film;
@@ -59,7 +59,10 @@ public class FilmController {
 
     // Метод проверки даты выхода
     private void validateReleaseDate(Film film) {
-        if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
+        if (film.getReleaseDate() == null) {
+            log.error("Ошибка при добавлении фильма");
+            throw new ValidationException("Дата релиза должна быть указана");
+        } else if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
             log.error("Дата релиза фильма недействительна: {}", film.getReleaseDate());
             throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
         }

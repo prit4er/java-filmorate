@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.controller;
 
-
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +37,7 @@ public class UserController {
             log.error("Ошибка при добавлении юзера");
             throw new ValidationException("Логин не может содержать пробелы");
         }
+
         user.setId(getNextId());
         users.put(user.getId(), user);
         log.debug("Добавлен юзер с Id {}", user.getId());

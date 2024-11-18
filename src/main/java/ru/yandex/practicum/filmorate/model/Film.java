@@ -12,7 +12,7 @@ import java.time.LocalDate;
 // 	•	@NotNull обеспечивает проверку на этапе обработки запросов.
 
 @Data
-@Builder
+@Builder(toBuilder = true)
 public class Film {
     @Builder.Default
     private Long id = Long.valueOf(0);

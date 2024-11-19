@@ -30,7 +30,6 @@ public class User {
     private String login;
 
     // Имя для отображения может быть пустым — в таком случае будет использован логин
-    @NotNull(message = "Имя не может быть null")
     private String name;
 
     // Дата рождения не может быть в будущем

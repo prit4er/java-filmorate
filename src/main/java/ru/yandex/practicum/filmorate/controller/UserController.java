@@ -1,8 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -19,10 +18,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
+@Slf4j
 @RequestMapping("/users")
 public class UserController {
 
-    private static final Logger log = LoggerFactory.getLogger(UserController.class);
     private final Map<Long, User> users = new HashMap<>();
 
     @GetMapping
@@ -35,22 +34,7 @@ public class UserController {
 
 
     @PostMapping
-    public User create(@RequestBody User user) {
-        // Даже при наличии аннатаций внутри модульного класса,
-        // почему то без доп проверок в методе у меня не проходит чек стайл
-        // А точнее постман тесты
-        // Именно на логине и Birthday
-        if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" ")) {
-            log.error("Ошибка при добавлении юзера");
-            throw new ValidationException("Логин не может быть пустым и содержать пробелы");
-        }
-        if (user.getBirthday() == null) {
-            log.error("Ошибка при добавлении юзера");
-            throw new ValidationException("Дата рождения должна быть указана");
-        } else if (user.getBirthday().isAfter(LocalDate.now())) {
-            log.error("Ошибка при добавлении юзера");
-            throw new ValidationException("Дата рождения не может быть в будущем");
-        }
+    public User create(@Valid @RequestBody User user) {
         user.setId(getNextId());
         users.put(user.getId(), user);
         log.debug("Добавлен юзер с Id {}", user.getId());

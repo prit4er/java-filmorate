@@ -15,13 +15,11 @@ import java.time.LocalDate;
 @Builder(toBuilder = true)
 public class Film {
 
-    @Builder.Default
-    private Long id = Long.valueOf(0);
+    private Long id;
 
-    @Builder.Default
     @NotNull(message = "Имя не может быть null")
     @NotBlank(message = "Имя не может быть пустым")
-    private String name = "Default name";
+    private String name;
 
     @Builder.Default
     @NotNull(message = "Описание не может быть null")

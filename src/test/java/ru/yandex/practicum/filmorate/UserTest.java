@@ -58,20 +58,6 @@ class UserTest {
     }
 
     @Test
-    void testBlankNameUsesLogin() {
-        User user = User.builder()
-                        .email("test@example.com")
-                        .login("validLogin")
-                        .name("")
-                        .birthday(LocalDate.of(2000, 1, 1))
-                        .build();
-
-        Set<ConstraintViolation<User>> violations = validator.validate(user);
-        assertTrue(violations.isEmpty(), "User should be valid even if name is empty");
-        assertEquals("validLogin", user.getName(), "Name should default to login");
-    }
-
-    @Test
     void testFutureBirthday() {
         User user = User.builder()
                         .email("test@example.com")

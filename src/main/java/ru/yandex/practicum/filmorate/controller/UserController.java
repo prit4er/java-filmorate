@@ -33,6 +33,10 @@ public class UserController {
 
     @PostMapping
     public User create(@Valid @RequestBody User user) {
+        //Почему я не могу иметь эту валидацию в методе getName класса модели User?
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
         user.setId(getNextId());
         users.put(user.getId(), user);
         log.debug("Добавлен юзер с Id {}", user.getId());

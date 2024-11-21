@@ -37,11 +37,4 @@ public class User {
     @NotNull
     private LocalDate birthday;
 
-    // Кастомная логика для установки имени по умолчанию как логин, если имя пустое
-    public String getName() {
-        if (name == null || name.isBlank()) {
-            return login;  // Используем логин, если имя пустое
-        }
-        return name;
-    }
 }

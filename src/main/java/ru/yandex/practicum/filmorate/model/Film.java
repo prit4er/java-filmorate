@@ -21,18 +21,15 @@ public class Film {
     @NotBlank(message = "Имя не может быть пустым")
     private String name;
 
-    @Builder.Default
     @NotNull(message = "Описание не может быть null")
     @NotBlank
     @Size(min = 1, max = 200, message = "Описание должно содержать от 1 до 200 символов")
-    private String description = "Default description";
+    private String description;
 
-    @Builder.Default
     @NotNull(message = "Дата выхода не может быть null")
-    private LocalDate releaseDate = LocalDate.of(2000, 12, 28);
+    private LocalDate releaseDate;
 
-    @Builder.Default
     @NotNull(message = "Длительность не может быть null")
     @Min(1)
-    private Integer duration = Integer.valueOf(110);
+    private Integer duration;
 }

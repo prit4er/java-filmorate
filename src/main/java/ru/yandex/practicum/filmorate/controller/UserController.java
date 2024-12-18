@@ -12,6 +12,7 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,14 +27,13 @@ public class UserController {
     public Collection<User> findAll() {
         if (users.isEmpty()) {
             log.error("Список пользователей пуст");
-            return null;
+            return Collections.emptyList();
         } else return users.values();
     }
 
 
     @PostMapping
     public User create(@Valid @RequestBody User user) {
-        //Почему я не могу иметь эту валидацию в методе getName класса модели User?
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }

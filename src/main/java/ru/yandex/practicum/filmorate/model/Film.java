@@ -8,12 +8,14 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 // 	•	@NotNull обеспечивает проверку на этапе обработки запросов.
 
 @Data
 @Builder(toBuilder = true)
-public class Film {
+public class Film implements Comparable<Film> {
 
     private Long id;
 
@@ -32,4 +34,29 @@ public class Film {
     @NotNull(message = "Длительность не может быть null")
     @Min(1)
     private Integer duration;
+
+    private Set<Long> likes = new HashSet<>();
+
+    public void addLike(Long userId) {
+        likes.add(userId);
+    }
+
+    public void removeLike(Long userId) {
+        likes.remove(userId);
+    }
+
+    @Override
+    public String toString() {
+        return "Film{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", releaseDate=" + releaseDate +
+                ", duration=" + duration +
+                '}';
+    }
+
+    public int compareTo(Film obj) {
+        return obj.getLikes().size() - this.getLikes().size();
+    }
 }

@@ -41,7 +41,11 @@ class UserTest {
                         .build();
 
         Set<ConstraintViolation<User>> violations = validator.validate(user);
-        assertFalse(violations.isEmpty(), "User with invalid email should not be valid");
+        assertFalse(violations.isEmpty(), "Электронная почта должна быть в формате 'example@domain.com");
+
+        // Проверка конкретного сообщения ошибки для email
+        String errorMessage = violations.iterator().next().getMessage();
+        assertEquals("Электронная почта должна быть в формате 'example@domain.com'", errorMessage);
     }
 
     @Test
@@ -54,7 +58,11 @@ class UserTest {
                         .build();
 
         Set<ConstraintViolation<User>> violations = validator.validate(user);
-        assertFalse(violations.isEmpty(), "User with login containing spaces should not be valid");
+        assertFalse(violations.isEmpty(), "Логин не может содержать пробелы");
+
+        // Проверка сообщения ошибки для логина
+        String errorMessage = violations.iterator().next().getMessage();
+        assertEquals("Логин не может содержать пробелы", errorMessage);
     }
 
     @Test
@@ -67,6 +75,57 @@ class UserTest {
                         .build();
 
         Set<ConstraintViolation<User>> violations = validator.validate(user);
-        assertFalse(violations.isEmpty(), "User with future birthday should not be valid");
+        assertFalse(violations.isEmpty(), "Дата рождения не может быть в будущем");
+
+        // Проверка сообщения ошибки для будущей даты
+        String errorMessage = violations.iterator().next().getMessage();
+        assertEquals("Дата рождения не может быть в будущем", errorMessage);
+    }
+
+    @Test
+    void testEmptyEmail() {
+        User user = User.builder()
+                        .email(" ")
+                        .login("validLogin")
+                        .name("Valid Name")
+                        .birthday(LocalDate.of(2000, 1, 1))
+                        .build();
+
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertFalse(violations.isEmpty(), "Электронная почта не может быть пустой'");
+
+        // Проверка сообщения ошибки для пустого email
+        String errorMessage = violations.iterator().next().getMessage();
+        assertEquals("Электронная почта не может быть пустой", errorMessage);
+    }
+
+    @Test
+    void testEmptyLogin() {
+        User user = User.builder()
+                        .email("test@example.com")
+                        .login(" ")
+                        .name("Valid Name")
+                        .birthday(LocalDate.of(2000, 1, 1))
+                        .build();
+
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertFalse(violations.isEmpty(), "Логин не может содержать пробелы");
+    }
+
+    @Test
+    void testEmptyBirthday() {
+        User user = User.builder()
+                        .email("test@example.com")
+                        .login("validLogin")
+                        .name("Valid Name")
+                        .birthday(null) // Null birthday
+                        .build();
+
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertFalse(violations.isEmpty(), "Дата рождения должна быть указана");
+
+        // Проверка сообщения ошибки для пустой даты рождения
+        String errorMessage = violations.iterator().next().getMessage();
+        assertEquals("не должно равняться null", errorMessage);
     }
 }

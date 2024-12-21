@@ -71,9 +71,12 @@ public class UserController {
     @GetMapping("/{id}/friends")
     public List<User> getFriends(@PathVariable Long id) {
         Optional<List<User>> friendsList = inMemoryUserStorage.getFriends(id);
-        if (friendsList.isPresent()) {
+        if (friendsList.isPresent() && !friendsList.get().isEmpty()) {
             return friendsList.get();
-        } else return Collections.emptyList();
+        } else {
+            log.warn("У пользователя с id = {} нет друзей", id);
+            return Collections.emptyList(); // или выбрасывать исключение, если требуется
+        }
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
@@ -92,18 +95,21 @@ public class UserController {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Map<String, String> handleThrowable(final Throwable e) {
-        return Map.of("errorMessage", e.getMessage());
+        log.error("Необработанная ошибка: ", e);
+        return Map.of("errorMessage", "Произошла ошибка: " + e.getMessage());
     }
 
-    @ExceptionHandler
-    @ResponseStatus(code = HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(ValidationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> handleValidationException(final ValidationException e) {
+        log.warn("Ошибка валидации: {}", e.getMessage());
         return Map.of("errorMessage", e.getMessage());
     }
 
-    @ExceptionHandler
-    @ResponseStatus(code = HttpStatus.NOT_FOUND)
+    @ExceptionHandler(NotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     public Map<String, String> handleNotFoundException(final NotFoundException e) {
+        log.warn("Не найден объект: {}", e.getMessage());
         return Map.of("errorMessage", e.getMessage());
     }
 }

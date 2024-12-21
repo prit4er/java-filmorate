@@ -26,48 +26,30 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     public User create(User user) {
-        // Валидация email
         if (user.getEmail() == null || user.getEmail().isBlank() || !user.getEmail().contains("@")) {
-            log.error("Ошибка при добавлении пользователя: неверный email {}", user.getEmail());
+            log.error("Ошибка при добавлении юзера");
             throw new ValidationException("Электронная почта не может быть пустой и должна содержать символ @");
         }
-
-        // Проверка на уникальность email
-        Optional<User> existingUserWithEmail = findByEmail(user.getEmail());
-        if (existingUserWithEmail.isPresent()) {
-            log.error("Ошибка при добавлении пользователя: email уже используется {}", user.getEmail());
-            throw new ValidationException("Этот email уже используется");
-        }
-
-        // Валидация логина
         if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" ")) {
-            log.error("Ошибка при добавлении пользователя: неверный логин {}", user.getLogin());
+            log.error("Ошибка при добавлении юзера");
             throw new ValidationException("Логин не может быть пустым и содержать пробелы");
         }
-
-        // Валидация даты рождения
         if (user.getBirthday() == null) {
-            log.error("Ошибка при добавлении пользователя: не указана дата рождения");
+            log.error("Ошибка при добавлении юзера");
             throw new ValidationException("Дата рождения должна быть указана");
         } else if (user.getBirthday().isAfter(LocalDate.now())) {
-            log.error("Ошибка при добавлении пользователя: дата рождения в будущем");
+            log.error("Ошибка при добавлении юзера");
             throw new ValidationException("Дата рождения не может быть в будущем");
         }
-
-        // Если имя не указано, берем логин
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
-
-        // Инициализация списка друзей, если он не был передан
         if (user.getFriends() == null) {
             user.setFriends(new HashSet<>());
         }
-
-        // Присваиваем ID и добавляем пользователя в хранилище
         user.setId(getNextId());
         users.put(user.getId(), user);
-        log.debug("Добавлен пользователь с Id {}", user.getId());
+        log.debug("Добавлен юзер с Id {}", user.getId());
         return user;
     }
 
@@ -80,91 +62,76 @@ public class InMemoryUserStorage implements UserStorage {
         return ++currentMaxId;
     }
 
+    private boolean isEmailAlreadyUsed(String email, Long userId) {
+        return users.values().stream()
+                    .anyMatch(user -> !user.getId().equals(userId) && user.getEmail().equals(email));
+    }
+
     public User update(User newUser) {
         if (newUser.getId() == null) {
-            log.error("Ошибка при обновлении пользователя: Id не указан");
-            throw new NotFoundException("Id должен быть указан");
+            log.error("Ошибка при обновлении данных юзера");
+            throw new ValidationException("Id должен быть указан");
         }
-
-        User oldUser = users.get(newUser.getId());
-        if (oldUser == null) {
-            log.error("Ошибка при обновлении пользователя: пользователь с id = {} не найден", newUser.getId());
-            throw new NotFoundException("Пользователь с id = " + newUser.getId() + " не найден");
-        }
-
-        // Проверка на уникальность email
-        if (newUser.getEmail() != null && !newUser.getEmail().equals(oldUser.getEmail())) {
-            Optional<User> existingUserWithEmail = findByEmail(newUser.getEmail());
-            if (existingUserWithEmail.isPresent()) {
-                log.error("Ошибка при обновлении пользователя: email уже используется");
-                throw new ValidationException("Этот email уже используется");
+        if (users.containsKey(newUser.getId())) {
+            User oldUser = users.get(newUser.getId());
+            for (User user0 : users.values()) {
+                if (isEmailAlreadyUsed(newUser.getEmail(), newUser.getId())) {
+                    log.error("Ошибка при обновлении данных юзера: этот имейл уже используется {}", newUser.getEmail());
+                    throw new ValidationException("Этот имейл уже используется");
+                }
             }
+            if (newUser.getEmail() != null && !newUser.getEmail().isEmpty()) {
+                log.trace("Изменен имейл юзера с Id {}", newUser.getId());
+                oldUser.setEmail(newUser.getEmail());
+            }
+            if (newUser.getLogin() != null && !newUser.getLogin().isEmpty()) {
+                log.trace("Изменен логин юзера с Id {}", newUser.getId());
+                oldUser.setLogin(newUser.getLogin());
+            }
+            if (newUser.getName() != null && !newUser.getName().isEmpty()) {
+                log.trace("Изменено имя юзера с Id {}", newUser.getId());
+                oldUser.setName(newUser.getName());
+            }
+            if (newUser.getBirthday() != null && !newUser.getBirthday().isAfter(LocalDate.now())) {
+                log.trace("Изменена дата рождения юзера с Id {}", newUser.getId());
+                oldUser.setBirthday(newUser.getBirthday());
+            }
+            log.debug("Обновлен юзер с Id {}", newUser.getId());
+            return oldUser;
         }
-
-        // Обновляем только поля, которые не равны null или пустым
-        if (newUser.getEmail() != null && !newUser.getEmail().isEmpty()) {
-            oldUser.setEmail(newUser.getEmail());
-            log.trace("Изменен email пользователя с Id {}", newUser.getId());
-        }
-        if (newUser.getLogin() != null && !newUser.getLogin().isEmpty()) {
-            oldUser.setLogin(newUser.getLogin());
-            log.trace("Изменен логин пользователя с Id {}", newUser.getId());
-        }
-        if (newUser.getName() != null && !newUser.getName().isEmpty()) {
-            oldUser.setName(newUser.getName());
-            log.trace("Изменено имя пользователя с Id {}", newUser.getId());
-        }
-        if (newUser.getBirthday() != null && !newUser.getBirthday().isAfter(LocalDate.now())) {
-            oldUser.setBirthday(newUser.getBirthday());
-            log.trace("Изменена дата рождения пользователя с Id {}", newUser.getId());
-        }
-
-        log.debug("Обновлен пользователь с Id {}", newUser.getId());
-        return oldUser;
+        log.error("Ошибка при добавлении юзера");
+        throw new NotFoundException("Юзер с id = " + newUser.getId() + " не найден");
     }
 
-    @Override
     public Optional<User> getUserById(Long id) {
-        User user = users.get(id);
-        if (user == null) {
-            log.error("Пользователь с id = {} не найден", id);
-            throw new NotFoundException("Пользователь с id = " + id + " не найден");
+        if (users.size() == 0) {
+            log.error("Ошибка при получении списка юзеров");
+            return Optional.empty();
         }
-        return Optional.of(user);
+        if (users.containsKey(id)) {
+            return Optional.of(users.get(id));
+        }
+        log.error("Ошибка при получении списка юзеров");
+        return Optional.empty();
     }
 
-    public Optional<User> findByEmail(String email) {
-        return users.values().stream()
-                    .filter(user -> user.getEmail().equals(email))
-                    .findFirst();
-    }
 
     public Optional<List<User>> getFriends(Long id) {
-        if (users.isEmpty()) {
-            log.error("Ошибка при получении друзей: хранилище пусто");
+        List<User> result = new ArrayList<>();
+        if (users.size() == 0) {
+            log.error("Ошибка при получении списка юзеров");
             return Optional.empty();
         }
-
-        User user = users.get(id);
-        if (user == null) {
-            log.error("Ошибка при получении друзей: пользователь с id = {} не найден", id);
-            throw new NotFoundException("Пользователь с id = " + id + " не найден");
+        if (!users.containsKey(id)) {
+            throw new NotFoundException("Юзер с id = " + id + " не найден");
         }
-
-        List<User> friendsList = new ArrayList<>();
-        for (Long friendId : user.getFriends()) {
-            User friend = users.get(friendId);
-            if (friend != null) {
-                friendsList.add(friend);
+        if (users.containsKey(id) && users.get(id).getFriends().size() > 0) {
+            for (Long userFriendId : users.get(id).getFriends()) {
+                result.add(users.get(userFriendId));
             }
+            return Optional.of(result);
         }
-
-        // Возвращаем Optional, который может быть пустым, если нет друзей
-        if (friendsList.isEmpty()) {
-            log.warn("У пользователя с id = {} нет друзей", id);
-            return Optional.empty();
-        }
-
-        return Optional.of(friendsList);
+        log.error("Ошибка при получении списка юзеров");
+        return Optional.empty();
     }
 }

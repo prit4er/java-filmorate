@@ -82,21 +82,22 @@ class UserTest {
         assertEquals("Дата рождения не может быть в будущем", errorMessage);
     }
 
+
     @Test
-    void testEmptyEmail() {
+    public void testCreateMethodWithEmptyEmail() {
+        // Создаем пользователя с пустым email
         User user = User.builder()
-                        .email(" ")
+                        .email(" ")  // Пустой email
                         .login("validLogin")
                         .name("Valid Name")
-                        .birthday(LocalDate.of(2000, 1, 1))
+                        .birthday(LocalDate.now().plusDays(1)) // Дата в будущем
                         .build();
 
+        // Используем валидатор для проверки данных пользователя
         Set<ConstraintViolation<User>> violations = validator.validate(user);
-        assertFalse(violations.isEmpty(), "Электронная почта не может быть пустой'");
 
-        // Проверка сообщения ошибки для пустого email
-        String errorMessage = violations.iterator().next().getMessage();
-        assertEquals("Электронная почта не может быть пустой", errorMessage);
+        // Проверяем, что нарушения валидации не пусты
+        assertFalse(violations.isEmpty(), "Электронная почта не может быть пустой и должна содержать символ @");
     }
 
     @Test

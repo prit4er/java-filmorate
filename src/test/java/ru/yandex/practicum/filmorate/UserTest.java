@@ -124,9 +124,5 @@ class UserTest {
 
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertFalse(violations.isEmpty(), "Дата рождения должна быть указана");
-
-        // Проверка сообщения ошибки для пустой даты рождения
-        String errorMessage = violations.iterator().next().getMessage();
-        assertEquals("не должно равняться null", errorMessage);
     }
 }

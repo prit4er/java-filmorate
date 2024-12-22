@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -16,11 +17,12 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     // Обработчик всех необработанных исключений
-    @ExceptionHandler(Throwable.class)
+    @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public Map<String, String> handleThrowable(final Throwable e) {
-        log.error("Необработанная ошибка: ", e);
-        return Map.of("errorMessage", "Произошла ошибка: " + e.getMessage());
+    public Map<String, String> handleGeneralException(Exception e) {
+        Map<String, String> error = new HashMap<>();
+        error.put("errorMessage", "Произошла ошибка: " + e.getMessage());
+        return error;
     }
 
     // Обработчик ошибок валидации
@@ -38,9 +40,9 @@ public class GlobalExceptionHandler {
 
     // Обработчик NotFoundException
     @ExceptionHandler(NotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public Map<String, String> handleNotFoundException(final NotFoundException e) {
-        log.warn("Не найден объект: {}", e.getMessage());
-        return Map.of("errorMessage", e.getMessage());
+    public ResponseEntity<Object> handleNotFoundException(NotFoundException ex) {
+        // Формируем ошибку с подробным сообщением
+        String errorMessage = "Произошла ошибка: " + ex.getMessage();
+        return new ResponseEntity<>(new ErrorResponse(errorMessage), HttpStatus.NOT_FOUND);
     }
 }

@@ -93,7 +93,7 @@ public class FilmControllerTest {
     public void testCreateMethodWithNullDuration() {
         Film film = createFilm(1L);
         film.setDuration(null); // Устанавливаем продолжительность в null
-        assertValidationException(() -> filmController.create(film), "Продолжительность фильма должна быть указана");
+        assertValidationException(() -> filmController.create(film), "Продолжительность фильма должна быть положительным числом");
     }
 
     @Test

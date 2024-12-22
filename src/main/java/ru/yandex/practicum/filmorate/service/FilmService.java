@@ -1,9 +1,9 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -16,17 +16,12 @@ import java.util.*;
 
 @Service
 @Data
+@RequiredArgsConstructor
 public class FilmService {
 
     private final FilmStorage filmStorage;  // Хранилище фильмов
     private final UserStorage inMemoryUserStorage;
     private static final Logger log = LoggerFactory.getLogger(FilmController.class);
-
-    @Autowired
-    public FilmService(FilmStorage filmStorage, UserStorage inMemoryUserStorage) {
-        this.filmStorage = filmStorage;
-        this.inMemoryUserStorage = inMemoryUserStorage;
-    }
 
     // Метод для получения всех фильмов
     public List<Film> findAll() {
@@ -44,55 +39,44 @@ public class FilmService {
     }
 
     // Метод для получения фильма по ID
-    public Optional<Film> getFilmById(Long filmId) {
-        return filmStorage.getFilmById(filmId);
+    public Film getFilmById(Long filmId) {
+        return filmStorage.getFilmById(filmId)
+                          .orElseThrow(() -> new NotFoundException("Фильм с id = " + filmId + " не найден."));
     }
 
-    // Методы для лайков (вы уже добавили их в вашем классе)
-    public void giveLike(Long userId, Long filmId) {
-        Optional<User> user = inMemoryUserStorage.getUserById(userId);
-        if (user.isEmpty()) {
-            log.error("Попытка поставить лайк фильму с несуществующим пользователем с id {}", userId);
-            throw new NotFoundException("Юзер с id " + userId + " отсутствует");
-        }
-
-        Optional<Film> film = filmStorage.getFilmById(filmId);
-        if (film.isPresent()) {
-            film.get().addLike(userId);
-            log.trace("Пользователь с id {} поставил лайк фильму с id {}", userId, filmId);
-        } else {
-            log.error("Попытка поставить лайк несуществующему фильму с id {}", filmId);
-            throw new NotFoundException("Фильм с id " + filmId + " отсутствует.");
-        }
+    // Новый метод для получения пользователя по ID с обработкой отсутствия
+    private User getUser(Long userId) {
+        return inMemoryUserStorage.getUserById(userId)
+                                  .orElseThrow(() -> new NotFoundException("Юзер с id = " + userId + " не найден."));
     }
 
-    // Удаление лайка
-    public void removeLike(Long userId, Long filmId) {
-        Optional<User> user = inMemoryUserStorage.getUserById(userId);
-        if (user.isEmpty()) {
-            log.error("Попытка удалить лайк фильму с несуществующим пользователем с id {}", userId);
-            throw new NotFoundException("Юзер с id " + userId + " отсутствует");
+    // Методы для лайков
+    public void addLike(Long filmId, Long userId) {
+        Film film = getFilmById(filmId);
+        User user = getUser(userId);
+
+        if (film.getLikes().contains(userId)) {
+            throw new IllegalArgumentException("Пользователь с id = " + userId + " уже поставил лайк.");
         }
 
-        Optional<Film> film = filmStorage.getFilmById(filmId);
-        if (film.isPresent()) {
-            film.get().removeLike(userId);
-            log.trace("Пользователь с id {} удалил лайк у фильма с id {}", userId, filmId);
-        } else {
-            log.error("Попытка удалить лайк у несуществующего фильма с id {}", filmId);
-            throw new NotFoundException("Фильм с id " + filmId + " отсутствует.");
+        film.getLikes().add(userId);
+        filmStorage.save(film);
+    }
+
+    public void removeLike(Long filmId, Long userId) {
+        Film film = getFilmById(filmId);
+        User user = getUser(userId);
+
+        if (!film.getLikes().contains(userId)) {
+            throw new IllegalArgumentException("Пользователь с id = " + userId + " не ставил лайк.");
         }
+
+        film.getLikes().remove(userId);
+        filmStorage.save(film);
     }
 
     // Получить самые популярные фильмы
     public List<Film> getMostPopularFilms(Integer count) {
-        List<Film> allFilmsList = new ArrayList<>(filmStorage.findAll());
-
-        if (allFilmsList.size() <= count) {
-            return allFilmsList;
-        }
-
-        Collections.sort(allFilmsList);
-        return allFilmsList.subList(0, count);
+        return filmStorage.findMostPopularFilms(count);  // Используем метод репозитория
     }
 }

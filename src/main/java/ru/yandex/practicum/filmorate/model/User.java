@@ -42,10 +42,6 @@ public class User {
     @Builder.Default
     private Set<Long> friends = new HashSet<>();
 
-    public void setToFriends(Long id) {
-        friends.add(id);
-    }
-
     public void removeFromFriends(Long id) {
         friends.remove(id);
     }
@@ -53,6 +49,7 @@ public class User {
     public boolean isFriend(Long id) {
         return friends.contains(id);
     }
+
 
     @Override
     public String toString() {

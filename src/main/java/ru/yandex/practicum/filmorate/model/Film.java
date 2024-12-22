@@ -35,15 +35,7 @@ public class Film implements Comparable<Film> {
     @Min(1)
     private Integer duration;
 
-    private Set<Long> likes = new HashSet<>();
-
-    public void addLike(Long userId) {
-        likes.add(userId);
-    }
-
-    public void removeLike(Long userId) {
-        likes.remove(userId);
-    }
+    private Set<Long> likes;
 
     @Override
     public String toString() {

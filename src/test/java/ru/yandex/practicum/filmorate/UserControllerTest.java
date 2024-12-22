@@ -26,7 +26,7 @@ public class UserControllerTest {
     public void setUp() {
         inMemoryUserStorage = new InMemoryUserStorage();
         userService = new UserService(inMemoryUserStorage);
-        userController = new UserController(inMemoryUserStorage, userService);
+        userController = new UserController(userService);  // создаем контроллер с UserService
 
         user0 = User.builder()
                     .id(1L)
@@ -46,7 +46,6 @@ public class UserControllerTest {
 
     @Test
     public void testFindAllWithEmptyUsers() {
-        // Вместо того, чтобы ожидать исключение, проверим, что возвращается пустой список
         assertTrue(userController.findAll().isEmpty(), "Список пользователей должен быть пустым");
     }
 
@@ -81,32 +80,29 @@ public class UserControllerTest {
     public void testCreateUserWithNullBirthday() {
         user0.setBirthday(null);
         ValidationException exception = assertThrows(ValidationException.class, () -> userController.create(user0));
-        assertEquals("Дата рождения должна быть указана", exception.getMessage());
+        assertEquals("Дата рождения должна быть указана и не может быть в будущем", exception.getMessage());
     }
 
     @Test
     public void testCreateUserWithBirthdayInFuture() {
         user0.setBirthday(LocalDate.of(2300, 12, 28));
         ValidationException exception = assertThrows(ValidationException.class, () -> userController.create(user0));
-        assertEquals("Дата рождения не может быть в будущем", exception.getMessage());
+        assertEquals("Дата рождения должна быть указана и не может быть в будущем", exception.getMessage());
     }
 
     @Test
     public void testUpdateMethodWithNullId() {
-        user0.setId(null);  // Устанавливаем id равным null
+        user0.setId(null);
         NotFoundException exception = assertThrows(NotFoundException.class, () -> userController.update(user0));
-        assertEquals("Id должен быть указан", exception.getMessage());  // Проверяем правильность сообщения
+        assertEquals("Пользователь с id = null не найден.", exception.getMessage());
     }
 
     @Test
     public void testCreateUserWithSameEmail() {
-        // Создаем первого пользователя
         userController.create(user0);
 
-        // Создаем второго пользователя с таким же email
         User user1 = user0.toBuilder().id(2L).email("john.doe@mail.com").build();
 
-        // Попытка создания второго пользователя с тем же email
         ValidationException exception = assertThrows(ValidationException.class, () -> userController.create(user1));
         assertEquals("Этот email уже используется", exception.getMessage());
     }
@@ -116,7 +112,7 @@ public class UserControllerTest {
         userController.create(user0);
         User user1 = user0.toBuilder().id(44L).build();
         NotFoundException exception = assertThrows(NotFoundException.class, () -> userController.update(user1));
-        assertEquals("Пользователь с id = 44 не найден", exception.getMessage());
+        assertEquals("Пользователь с id = 44 не найден.", exception.getMessage());
     }
 
     @Test

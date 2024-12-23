@@ -37,14 +37,24 @@ public class FilmController {
 
     @PutMapping("/{filmId}/likes/{userId}")
     public void addLike(@PathVariable Long filmId, @PathVariable Long userId) {
-        log.info("Пользователь с id = {} ставит лайк фильму с id = {}", userId, filmId);
-        filmService.addLike(filmId, userId);
+        try {
+            log.info("Пользователь с id = {} ставит лайк фильму с id = {}", userId, filmId);
+            filmService.addLike(filmId, userId);
+        } catch (Exception e) {
+            log.error("Ошибка при добавлении лайка к фильму с id = {} пользователем с id = {}", filmId, userId, e);
+            throw e;
+        }
     }
 
     @DeleteMapping("/{filmId}/likes/{userId}")
     public void removeLike(@PathVariable Long filmId, @PathVariable Long userId) {
-        log.info("Пользователь с id = {} удаляет лайк с фильма с id = {}", userId, filmId);
-        filmService.removeLike(filmId, userId);
+        try {
+            log.info("Пользователь с id = {} удаляет лайк с фильма с id = {}", userId, filmId);
+            filmService.removeLike(filmId, userId);
+        } catch (Exception e) {
+            log.error("Ошибка при удалении лайка с фильма с id = {} пользователем с id = {}", filmId, userId, e);
+            throw e;
+        }
     }
 
     @GetMapping("/popular")

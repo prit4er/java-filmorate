@@ -16,8 +16,7 @@ import java.util.Set;
 @Builder(toBuilder = true)
 public class User {
 
-    @Builder.Default
-    private Long id = 0L;
+    private Long id;
 
     // Электронная почта не может быть пустой и должна содержать символ @
     @NotBlank(message = "Электронная почта не может быть пустой")
@@ -39,7 +38,6 @@ public class User {
     @NotNull
     private LocalDate birthday;
 
-    @Builder.Default
     private Set<Long> friends = new HashSet<>();
 
     public void removeFromFriends(Long id) {

@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Set;
 
 // 	•	@NotNull обеспечивает проверку на этапе обработки запросов.
@@ -34,7 +35,7 @@ public class Film implements Comparable<Film> {
     @Min(1)
     private Integer duration;
 
-    private Set<Long> likes;
+    private Set<Long> likes = new HashSet<>();
 
     @Override
     public String toString() {

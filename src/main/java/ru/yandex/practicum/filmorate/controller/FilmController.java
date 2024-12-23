@@ -34,28 +34,17 @@ public class FilmController {
         log.info("Обновление фильма с Id: {}", newFilm.getId());
         return filmService.update(newFilm);
     }
-
-    @PutMapping("/{filmId}/likes/{userId}")
-    public void addLike(@PathVariable Long filmId, @PathVariable Long userId) {
-        try {
-            log.info("Пользователь с id = {} ставит лайк фильму с id = {}", userId, filmId);
-            filmService.addLike(filmId, userId);
-        } catch (Exception e) {
-            log.error("Ошибка при добавлении лайка к фильму с id = {} пользователем с id = {}", filmId, userId, e);
-            throw e;
+        @PutMapping("/{id}/like/{userId}")
+        public void addLike(@PathVariable long id, @PathVariable long userId) {
+            log.info("Получен запрос на добавление лайка фильму с id {} от пользователя с id {}.", id, userId);
+            filmService.addLike(id, userId);
         }
-    }
 
-    @DeleteMapping("/{filmId}/likes/{userId}")
-    public void removeLike(@PathVariable Long filmId, @PathVariable Long userId) {
-        try {
-            log.info("Пользователь с id = {} удаляет лайк с фильма с id = {}", userId, filmId);
-            filmService.removeLike(filmId, userId);
-        } catch (Exception e) {
-            log.error("Ошибка при удалении лайка с фильма с id = {} пользователем с id = {}", filmId, userId, e);
-            throw e;
+        @DeleteMapping("/{id}/like/{userId}")
+        public void deleteLike(@PathVariable long id, @PathVariable long userId) {
+            log.info("Получен запрос на удаление лайка у фильма с id {} от пользователя с id {}.", id, userId);
+            filmService.removeLike(id, userId);
         }
-    }
 
     @GetMapping("/popular")
     public List<Film> getMostPopularFilms(@RequestParam(defaultValue = "10") int count) {

@@ -2,8 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -16,12 +15,12 @@ import java.util.*;
 
 @Service
 @Data
+@Slf4j
 @RequiredArgsConstructor
 public class FilmService {
 
     private final FilmStorage filmStorage;  // Хранилище фильмов
     private final UserStorage inMemoryUserStorage;
-    private static final Logger log = LoggerFactory.getLogger(FilmService.class);
 
     // Метод для получения всех фильмов
     public List<Film> findAll() {

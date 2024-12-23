@@ -103,6 +103,7 @@ public class UserControllerTest {
 
         User user1 = user0.toBuilder().id(2L).email("john.doe@mail.com").build();
 
+
         ValidationException exception = assertThrows(ValidationException.class, () -> userController.create(user1));
         assertEquals("Этот email уже используется", exception.getMessage());
     }

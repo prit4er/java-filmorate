@@ -90,7 +90,7 @@ public class FilmLikesControllerTest {
         filmController.addLike(film1.getId(), user0.getId());
         filmController.addLike(film1.getId(), userPostman.getId());
 
-        filmController.removeLike(film1.getId(), userPostman.getId());
+        filmController.deleteLike(film1.getId(), userPostman.getId());
         Film updatedFilm = filmController.getFilmById(film1.getId());
 
         assertEquals(1, updatedFilm.getLikes().size(), "Фильм должен иметь 1 лайк после удаления");

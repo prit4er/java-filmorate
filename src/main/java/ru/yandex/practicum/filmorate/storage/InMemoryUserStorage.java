@@ -68,7 +68,7 @@ public class InMemoryUserStorage implements UserStorage {
     public List<User> getFriends(Long userId) {
         User user = users.get(userId);
         if (user == null) {
-            throw new NoSuchElementException("Пользователь с id = " + userId + " не найден.");
+            throw new NotFoundException("Пользователь с id = " + userId + " не найден."); // Используем кастомное исключение
         }
 
         // Получаем список друзей по их ID

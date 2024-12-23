@@ -90,8 +90,8 @@ public class InMemoryFilmStorage implements FilmStorage {
     public List<Film> findMostPopularFilms(int count) {
         List<Film> allFilmsList = new ArrayList<>(films.values());
 
-        // Сортируем фильмы по количеству лайков (по убыванию)
-        allFilmsList.sort((f1, f2) -> Integer.compare(f2.getLikes().size(), f1.getLikes().size()));
+        // Сортируем фильмы с использованием FilmLikesComparator
+        allFilmsList.sort(new FilmLikesComparator().thenComparing(Film::getId));
 
         // Ограничиваем количество фильмов, если их больше, чем нужно
         return allFilmsList.stream().limit(count).collect(Collectors.toList());

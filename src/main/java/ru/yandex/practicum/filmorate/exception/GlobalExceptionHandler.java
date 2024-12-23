@@ -38,6 +38,15 @@ public class GlobalExceptionHandler {
         return errors;
     }
 
+    @ExceptionHandler(ValidationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, String> handleValidationException(ValidationException ex) {
+        log.warn("Ошибка валидации: {}", ex.getMessage());
+        Map<String, String> error = new HashMap<>();
+        error.put("errorMessage", "Произошла ошибка: " + ex.getMessage());
+        return error;
+    }
+
     // Обработчик NotFoundException
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<Object> handleNotFoundException(NotFoundException ex) {

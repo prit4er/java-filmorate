@@ -4,8 +4,11 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
-@Setter @Getter @Data
+@Setter
+@Getter
+@Data
 public class ErrorResponse {
+
     private String errorMessage;
 
     public ErrorResponse(String errorMessage) {

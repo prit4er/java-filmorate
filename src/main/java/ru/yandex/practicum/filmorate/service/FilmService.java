@@ -5,8 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
@@ -21,7 +21,7 @@ public class FilmService {
 
     private final FilmStorage filmStorage;  // Хранилище фильмов
     private final UserStorage inMemoryUserStorage;
-    private static final Logger log = LoggerFactory.getLogger(FilmController.class);
+    private static final Logger log = LoggerFactory.getLogger(FilmService.class);
 
     // Метод для получения всех фильмов
     public List<Film> findAll() {
@@ -56,7 +56,7 @@ public class FilmService {
         User user = getUser(userId);
 
         if (film.getLikes().contains(userId)) {
-            throw new IllegalArgumentException("Пользователь с id = " + userId + " уже поставил лайк.");
+            throw new ValidationException("Пользователь с id = " + userId + " уже поставил лайк.");
         }
 
         film.getLikes().add(userId);
@@ -68,7 +68,7 @@ public class FilmService {
         User user = getUser(userId);
 
         if (!film.getLikes().contains(userId)) {
-            throw new IllegalArgumentException("Пользователь с id = " + userId + " не ставил лайк.");
+            throw new ValidationException("Пользователь с id = " + userId + " не ставил лайк.");
         }
 
         film.getLikes().remove(userId);

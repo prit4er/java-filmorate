@@ -5,17 +5,22 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Pattern;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
-@Builder(toBuilder = true)
+@Builder (toBuilder = true)
+@AllArgsConstructor
+@NoArgsConstructor
 public class User {
 
-    @Builder.Default
-    private Long id = 0L;
+    private Long id;
 
     // Электронная почта не может быть пустой и должна содержать символ @
     @NotBlank(message = "Электронная почта не может быть пустой")
@@ -37,4 +42,26 @@ public class User {
     @NotNull
     private LocalDate birthday;
 
+    private Set<Long> friends = new HashSet<>();
+
+    public void removeFromFriends(Long id) {
+        friends.remove(id);
+    }
+
+    public boolean isFriend(Long id) {
+        return friends.contains(id);
+    }
+
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", email='" + email + '\'' +
+                ", login='" + login + '\'' +
+                ", name='" + name + '\'' +
+                ", birthday=" + birthday +
+                ", friends=" + friends +
+                '}';
+    }
 }

@@ -5,6 +5,9 @@ import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 
 import java.time.LocalDate;
 
@@ -12,20 +15,26 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class FilmControllerTest {
 
-    FilmController filmController = new FilmController();
+    InMemoryUserStorage inMemoryUserStorage = new InMemoryUserStorage();
+    InMemoryFilmStorage inMemoryFilmStorage = new InMemoryFilmStorage();
+    FilmService filmService = new FilmService(inMemoryFilmStorage, inMemoryUserStorage);
+    FilmController filmController = new FilmController(filmService);
 
-    Film film0 = Film.builder()
-                     .id(1L)
-                     .name("Что то")
-                     .description("Ну интересный фильм.")
-                     .releaseDate(LocalDate.of(2010, 7, 16))
-                     .duration(148)
-                     .build();
+    // Метод для создания фильма
+    private Film createFilm(Long id) {
+        return Film.builder()
+                   .id(id)
+                   .name("Что-то")
+                   .description("Интересный фильм.")
+                   .releaseDate(LocalDate.of(2010, 7, 16))
+                   .duration(148)
+                   .build();
+    }
 
     @Test
     public void testFindAllMethodWithEmptyFilmsMap() {
         try {
-            filmController.findAll();
+            filmController.findAll(); // Попытка получить все фильмы, когда список пуст
         } catch (NotFoundException e) {
             assertEquals("Список фильмов пуст", e.getMessage());
         }
@@ -33,152 +42,129 @@ public class FilmControllerTest {
 
     @Test
     public void testFindAllMethodWithFilledMap() {
-        filmController.create(film0);
-        assertEquals(1, filmController.findAll().size());
+        Film film = createFilm(1L);
+        filmController.create(film); // Создаём фильм
+        assertEquals(1, filmController.findAll().size()); // Проверяем, что список не пуст
     }
 
     @Test
     public void testCreateMethodWithValidObject() {
-        Film testFilmObj = filmController.create(film0);
-        assertEquals(film0, testFilmObj);
+        Film film = createFilm(1L);
+        Film testFilmObj = filmController.create(film); // Создаём фильм
+        assertEquals(film, testFilmObj); // Проверяем, что возвращённый объект совпадает с созданным
     }
 
     @Test
     public void testCreateMethodWhenNameNull() {
-        film0.setName(null);
-        try {
-            filmController.create(film0);
-        } catch (ValidationException e) {
-            assertEquals("Название не может быть пустым", e.getMessage());
-        }
+        Film film = createFilm(1L);
+        film.setName(null);  // Устанавливаем имя фильма в null
+        assertValidationException(() -> filmController.create(film), "Название не может быть пустым");
     }
 
     @Test
     public void testCreateMethodWhenDescNull() {
-        film0.setDescription(null);
-        try {
-            filmController.create(film0);
-        } catch (ValidationException e) {
-            assertEquals("Описание не может быть пустым", e.getMessage());
-        }
+        Film film = createFilm(1L);
+        film.setDescription(null); // Устанавливаем описание фильма в null
+        assertValidationException(() -> filmController.create(film), "Описание не может быть пустым");
     }
 
     @Test
     public void testCreateMethodWhenDescMoreThan200Chars() {
-        String desc = "A".repeat(201); // 201 character description
-        film0.setDescription(desc);
-        try {
-            filmController.create(film0);
-        } catch (ValidationException e) {
-            assertEquals("Максимальная длина описания — 200 символов", e.getMessage());
-        }
+        Film film = createFilm(1L);
+        film.setDescription("A".repeat(201)); // Описание длиной больше 200 символов
+        assertValidationException(() -> filmController.create(film), "Максимальная длина описания — 200 символов");
     }
 
     @Test
     public void testCreateMethodWhenReleaseDateNull() {
-        film0.setReleaseDate(null);
-        try {
-            filmController.create(film0);
-        } catch (ValidationException e) {
-            assertEquals("Дата релиза должна быть указана", e.getMessage());
-        }
+        Film film = createFilm(1L);
+        film.setReleaseDate(null); // Устанавливаем дату релиза в null
+        assertValidationException(() -> filmController.create(film), "Дата релиза должна быть указана");
     }
 
     @Test
     public void testCreateMethodWhenReleaseDateBefore18951228() {
-        film0.setReleaseDate(LocalDate.of(1894, 12, 28));
-        try {
-            filmController.create(film0);
-        } catch (ValidationException e) {
-            assertEquals("Дата релиза не может быть раньше 28 декабря 1895 года", e.getMessage());
-        }
+        Film film = createFilm(1L);
+        film.setReleaseDate(LocalDate.of(1894, 12, 28)); // Дата релиза раньше 28 декабря 1895 года
+        assertValidationException(() -> filmController.create(film), "Дата релиза — не раньше 28 декабря 1895 года");
     }
 
     @Test
     public void testCreateMethodWithNullDuration() {
-        film0.setDuration(null);
-        try {
-            filmController.create(film0);
-        } catch (ValidationException e) {
-            assertEquals("Продолжительность фильма должна быть указана", e.getMessage());
-        }
+        Film film = createFilm(1L);
+        film.setDuration(null); // Устанавливаем продолжительность в null
+        assertValidationException(() -> filmController.create(film), "Продолжительность фильма должна быть положительным числом");
     }
 
     @Test
     public void testCreateMethodWithNegativeDuration() {
-        film0.setDuration(-120);
-        try {
-            filmController.create(film0);
-        } catch (ValidationException e) {
-            assertEquals("Продолжительность фильма должна быть положительным числом", e.getMessage());
-        }
+        Film film = createFilm(1L);
+        film.setDuration(-120); // Устанавливаем продолжительность в отрицательное число
+        assertValidationException(() -> filmController.create(film), "Продолжительность фильма должна быть положительным числом");
     }
 
     @Test
     public void testUpdateMethodWithNullId() {
-        filmController.create(film0);
-        film0.setId(null);
-        try {
-            filmController.update(film0);
-        } catch (NotFoundException e) {
-            assertEquals("Фильм с id = null не найден", e.getMessage());
-        }
+        Film film = createFilm(1L);
+        film.setId(null); // Устанавливаем id в null
+        assertValidationException(() -> filmController.update(film), "Id должен быть указан");
     }
 
     @Test
     public void testUpdateMethodWithSameName() {
-        filmController.create(film0);
-        Film film1 = film0;
-        film1.setName("Interstellar");
-        try {
-            filmController.update(film1);
-        } catch (ValidationException e) {
-            assertEquals("Название фильма не может быть изменено", e.getMessage());
-        }
+        Film film = createFilm(1L);
+        filmController.create(film); // Создаём фильм
+        film.setName("Interstellar"); // Пробуем изменить название
+        assertValidationException(() -> filmController.update(film), "Название фильма не может быть изменено");
     }
 
     @Test
     public void testUpdateMethodWithOtherReleaseDate() {
-        filmController.create(film0);
-        Film film1 = film0;
-        film1.setReleaseDate(LocalDate.of(2022, 12, 21));
-        try {
-            filmController.update(film1);
-        } catch (ValidationException e) {
-            assertEquals("Дата релиза не может быть изменена", e.getMessage());
-        }
+        Film film = createFilm(1L);
+        filmController.create(film); // Создаём фильм
+        film.setReleaseDate(LocalDate.of(2022, 12, 21)); // Пробуем изменить дату релиза
+        assertValidationException(() -> filmController.update(film), "Дата релиза не может быть изменена");
     }
 
     @Test
     public void testUpdateMethodWithOtherDurationDate() {
-        filmController.create(film0);
-        Film film1 = film0;
-        film1.setDuration(119);
-        try {
-            filmController.update(film1);
-        } catch (ValidationException e) {
-            assertEquals("Продолжительность фильма не может быть изменена", e.getMessage());
-        }
+        Film film = createFilm(1L);
+        filmController.create(film); // Создаём фильм
+        film.setDuration(119); // Пробуем изменить продолжительность
+        assertValidationException(() -> filmController.update(film), "Продолжительность фильма не может быть изменена");
     }
 
     @Test
     public void testUpdateMethodWithValidRequest() {
-        filmController.create(film0);
-        Film film1 = film0;
-        film1.setDescription("Новый дискрипшен");
-        filmController.update(film1);
-        assertEquals("Новый дискрипшен", film1.getDescription());
+        Film film = createFilm(1L);
+        filmController.create(film); // Создаём фильм
+        film.setDescription("Новый дискрипшен"); // Обновляем описание
+        filmController.update(film); // Обновляем фильм
+        assertEquals("Новый дискрипшен", film.getDescription()); // Проверяем, что описание обновилось
     }
 
     @Test
     public void testUpdateMethodWithWrongId() {
-        filmController.create(film0);
-        Film film1 = film0;
-        film1.setId(44L);
+        Film film = createFilm(1L);
+        filmController.create(film); // Создаём фильм
+        film.setId(44L); // Устанавливаем неправильный id
+        assertNotFoundException(() -> filmController.update(film), "Фильм с id = 44 не найден");
+    }
+
+    // Вспомогательные методы для проверки исключений
+    private void assertValidationException(Runnable action, String expectedMessage) {
         try {
-            filmController.update(film1);
+            action.run();
+        } catch (ValidationException e) {
+            assertEquals(expectedMessage, e.getMessage());
+        }
+    }
+
+    private void assertNotFoundException(Runnable action, String expectedMessage) {
+        try {
+            action.run();
         } catch (NotFoundException e) {
-            assertEquals("Фильм с id = 44 не найден", e.getMessage());
+            assertEquals(expectedMessage, e.getMessage());
         }
     }
 }

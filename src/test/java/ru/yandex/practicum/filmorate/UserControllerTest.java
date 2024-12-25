@@ -1,10 +1,13 @@
 package ru.yandex.practicum.filmorate;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 
 import java.time.LocalDate;
 
@@ -12,134 +15,120 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class UserControllerTest {
 
-    UserController userController = new UserController();
+    private InMemoryUserStorage inMemoryUserStorage;
+    private UserService userService;
+    private UserController userController;
 
-    User user0 = User.builder()
-                     .id(1L)
-                     .email("john.doe@mail.com")
-                     .login("johndoe")
-                     .name("John Doe")
-                     .birthday(LocalDate.of(1985, 5, 15))
-                     .build();
+    private User user0;
+    private User userPostman;
 
-    User userPostman = User.builder()
-                           .login("nick123")
-                           .name("Nick Johnson")
-                           .email("nick.johnson@mail.com")
-                           .birthday(LocalDate.of(1990, 3, 25))
-                           .build();
+    @BeforeEach
+    public void setUp() {
+        inMemoryUserStorage = new InMemoryUserStorage();
+        userService = new UserService(inMemoryUserStorage);
+        userController = new UserController(userService);  // создаем контроллер с UserService
 
-    @Test
-    public void testFindAllMethodWithEmptyUsersMap() {
-        try {
-            userController.findAll();
-        } catch (NotFoundException e) {
-            assertEquals("Список юзеров пуст", e.getMessage());
-        }
+        user0 = User.builder()
+                    .id(1L)
+                    .email("john.doe@mail.com")
+                    .login("johndoe")
+                    .name("John Doe")
+                    .birthday(LocalDate.of(1985, 5, 15))
+                    .build();
+
+        userPostman = User.builder()
+                          .login("nick123")
+                          .name("Nick Johnson")
+                          .email("nick.johnson@mail.com")
+                          .birthday(LocalDate.of(1990, 3, 25))
+                          .build();
     }
 
     @Test
-    public void testFindAllMethodWithFilledUsersMap() {
+    public void testFindAllWithEmptyUsers() {
+        assertTrue(userController.findAll().isEmpty(), "Список пользователей должен быть пустым");
+    }
+
+    @Test
+    public void testFindAllWithFilledUsers() {
         userController.create(user0);
         assertEquals(1, userController.findAll().size());
     }
 
     @Test
-    public void testCreateMethodWithValidObject() {
+    public void testCreateUserWithValidData() {
         User testUserObj = userController.create(user0);
-        assertEquals(user0, testUserObj);
+        assertNotNull(testUserObj.getId(), "ID должен быть присвоен");
+        assertEquals(user0.getEmail(), testUserObj.getEmail());
     }
 
     @Test
-    public void testCreateMethodWithValidObjectForPostman() {
-        User testUserObj = userController.create(userPostman);
-        assertEquals(userPostman, testUserObj);
-    }
-
-    @Test
-    public void testCreateMethodWithEmptyEmail() {
+    public void testCreateUserWithEmptyEmail() {
         user0.setEmail(" ");
-        try {
-            userController.create(user0);
-        } catch (ValidationException e) {
-            assertEquals("Электронная почта не может быть пустой и должна содержать символ @", e.getMessage());
-        }
+        ValidationException exception = assertThrows(ValidationException.class, () -> userController.create(user0));
+        assertEquals("Электронная почта не может быть пустой и должна содержать символ @", exception.getMessage());
     }
 
     @Test
-    public void testCreateMethodWithEmptyLogin() {
+    public void testCreateUserWithEmptyLogin() {
         user0.setLogin(" ");
-        try {
-            userController.create(user0);
-        } catch (ValidationException e) {
-            assertEquals("Логин не может быть пустым и содержать пробелы", e.getMessage());
-        }
+        ValidationException exception = assertThrows(ValidationException.class, () -> userController.create(user0));
+        assertEquals("Логин не может быть пустым и содержать пробелы", exception.getMessage());
     }
 
     @Test
-    public void testCreateMethodWithEmptyBirthday() {
+    public void testCreateUserWithNullBirthday() {
         user0.setBirthday(null);
-        try {
-            userController.create(user0);
-        } catch (ValidationException e) {
-            assertEquals("Дата рождения должна быть указана", e.getMessage());
-        }
+        ValidationException exception = assertThrows(ValidationException.class, () -> userController.create(user0));
+        assertEquals("Дата рождения должна быть указана и не может быть в будущем", exception.getMessage());
     }
 
     @Test
-    public void testCreateMethodWithBirthdayInFuture() {
+    public void testCreateUserWithBirthdayInFuture() {
         user0.setBirthday(LocalDate.of(2300, 12, 28));
-        try {
-            userController.create(user0);
-        } catch (ValidationException e) {
-            assertEquals("Дата рождения не может быть в будущем", e.getMessage());
-        }
+        ValidationException exception = assertThrows(ValidationException.class, () -> userController.create(user0));
+        assertEquals("Дата рождения должна быть указана и не может быть в будущем", exception.getMessage());
     }
 
     @Test
     public void testUpdateMethodWithNullId() {
         user0.setId(null);
-        try {
-            userController.update(user0);
-        } catch (NotFoundException e) {
-            assertEquals("Юзер с id = null не найден", e.getMessage());
-        }
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> userController.update(user0));
+        assertEquals("Пользователь с id = null не найден.", exception.getMessage());
     }
 
     @Test
-    public void testUpdateMethodWithSameEmail() {
+    public void testCreateUserWithSameEmail() {
         userController.create(user0);
-        User user1 = user0.toBuilder().id(2L).email("john.doe@mail.com").build(); // Same email
-        try {
-            userController.create(user1);
-            userController.update(user1);
-        } catch (ValidationException e) {
-            assertEquals("Этот имейл уже используется", e.getMessage());
-        }
+
+        User user1 = user0.toBuilder().id(2L).email("john.doe@mail.com").build();
+
+
+        ValidationException exception = assertThrows(ValidationException.class, () -> userController.create(user1));
+        assertEquals("Этот email уже используется", exception.getMessage());
     }
 
     @Test
-    public void testUpdateMethodWithWrongId() {
+    public void testUpdateUserWithWrongId() {
         userController.create(user0);
         User user1 = user0.toBuilder().id(44L).build();
-        try {
-            userController.update(user1);
-        } catch (NotFoundException e) {
-            assertEquals("Юзер с id = 44 не найден", e.getMessage());
-        }
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> userController.update(user1));
+        assertEquals("Пользователь с id = 44 не найден.", exception.getMessage());
     }
 
     @Test
-    public void testUpdateMethodWithValidRequest() {
+    public void testUpdateUserWithValidData() {
         userController.create(user0);
         user0.setEmail("john.new@mail.com");
         user0.setLogin("newjohndoe");
         user0.setName("John New Doe");
         user0.setBirthday(LocalDate.of(1990, 10, 10));
-        userController.update(user0);
-        assertEquals("john.new@mail.com", user0.getEmail());
-        assertEquals("newjohndoe", user0.getLogin());
-        assertEquals("John New Doe", user0.getName());
-        assertEquals(LocalDate.of(1990, 10, 10), user0.getBirthday());
+
+        User updatedUser = userController.update(user0);
+
+        assertEquals("john.new@mail.com", updatedUser.getEmail());
+        assertEquals("newjohndoe", updatedUser.getLogin());
+        assertEquals("John New Doe", updatedUser.getName());
+        assertEquals(LocalDate.of(1990, 10, 10), updatedUser.getBirthday());
     }
 }

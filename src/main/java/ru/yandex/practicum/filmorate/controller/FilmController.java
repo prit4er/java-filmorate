@@ -1,78 +1,61 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
+import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
 
-import java.time.LocalDate;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 @RestController
 @Slf4j
 @RequestMapping("/films")
+@RequiredArgsConstructor
 public class FilmController {
 
-    private final Map<Long, Film> films = new HashMap<>();
+    private final FilmService filmService;
 
     @GetMapping
-    public Collection<Film> findAll() {
-        if (films.isEmpty()) {
-            log.warn("Список фильмов пуст, возвращается пустой список.");
-            return Collections.emptyList();
-        }
-        return films.values();
+    public List<Film> findAll() {
+        log.info("Запрос на получение списка всех фильмов");
+        return filmService.findAll();
     }
 
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
-        if (film.getId() == null) {
-            film.setId(getNextId());
-        }
-        validateReleaseDate(film);
-        films.put(film.getId(), film);
-        log.debug("Добавлен фильм с Id {}", film.getId());
-        return film;
+        log.info("Создание нового фильма: {}", film);
+        return filmService.create(film);
     }
 
     @PutMapping
     public Film update(@Valid @RequestBody Film newFilm) {
-        if (!films.containsKey(newFilm.getId())) {
-            throw new NotFoundException("Фильм с id = " + newFilm.getId() + " не найден");
-        }
-        validateReleaseDate(newFilm);
-        films.put(newFilm.getId(), newFilm);
-        log.info("Обновлен фильм: {}", newFilm);
-        return newFilm;
+        log.info("Обновление фильма с Id: {}", newFilm.getId());
+        return filmService.update(newFilm);
     }
 
-    // Метод проверки даты выхода
-    private void validateReleaseDate(Film film) {
-        if (film.getReleaseDate() == null) {
-            log.error("Ошибка при добавлении фильма");
-            throw new ValidationException("Дата релиза должна быть указана");
-        } else if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
-            log.error("Дата релиза фильма недействительна: {}", film.getReleaseDate());
-            throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
-        }
+    @PutMapping("/{id}/like/{userId}")
+    public void addLike(@PathVariable long id, @PathVariable long userId) {
+        log.info("Получен запрос на добавление лайка фильму с id {} от пользователя с id {}.", id, userId);
+        filmService.addLike(id, userId);
     }
 
-    // Генерация ID
-    private long getNextId() {
-        return films.keySet()
-                    .stream()
-                    .mapToLong(id -> id)
-                    .max()
-                    .orElse(0) + 1;
+    @DeleteMapping("/{id}/like/{userId}")
+    public void deleteLike(@PathVariable long id, @PathVariable long userId) {
+        log.info("Получен запрос на удаление лайка у фильма с id {} от пользователя с id {}.", id, userId);
+        filmService.removeLike(id, userId);
+    }
+
+    @GetMapping("/popular")
+    public List<Film> getMostPopularFilms(@RequestParam(defaultValue = "10") int count) {
+        log.info("Запрос на получение популярных фильмов, ограничение по количеству: {}", count);
+        return filmService.getMostPopularFilms(count);
+    }
+
+    @GetMapping("/{filmId}")
+    public Film getFilmById(@PathVariable Long filmId) {
+        log.info("Запрос на получение фильма с id = {}", filmId);
+        return filmService.getFilmById(filmId);
     }
 }

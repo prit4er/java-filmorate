@@ -1,79 +1,97 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.FriendshipRepository;
+import ru.yandex.practicum.filmorate.storage.UserRepository;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class UserService {
 
-    private final UserStorage userStorage;
+    private final UserRepository userRepository;
+    private final FriendshipRepository friendshipRepository;
 
-    public Collection<User> findAll() {
-        return userStorage.findAll();
+    public List<UserDto> findAll() {
+        return userRepository.findAll()
+                             .stream()
+                             .map(UserMapper::mapToUserDto)
+                             .toList();
     }
 
-    public User create(User user) {
-        return userStorage.create(user);
+    public UserDto findById(Long id) {
+        return userRepository.findById(id)
+                             .map(UserMapper::mapToUserDto)
+                             .orElseThrow(() -> new NotFoundException(String.format("Пользователь с id=%d не найден", id)));
     }
 
-    public User update(User user) {
-        return userStorage.update(user);
-    }
-
-    public Optional<User> getUserById(Long id) {
-        return userStorage.getUserById(id);
-    }
-
-    public void addFriend(Long userId, Long friendId) {
-        User user = userStorage.getUserById(userId)
-                               .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден."));
-        User friend = userStorage.getUserById(friendId)
-                                 .orElseThrow(() -> new NotFoundException("Друг с id = " + friendId + " не найден."));
-
-        // Проверяем, что пользователь не может быть другом сам с собой
-        if (userId.equals(friendId)) {
-            throw new IllegalArgumentException("Невозможно добавить самого себя в друзья.");
+    public UserDto create(User user) {
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
         }
-
-        // Добавляем друг друга в список друзей
-        user.getFriends().add(friendId);
-        friend.getFriends().add(userId);
+        checkName(user);
+        return UserMapper.mapToUserDto(userRepository.create(user));
     }
 
-    public void removeFriend(Long userId, Long friendId) {
-        User user = userStorage.getUserById(userId)
-                               .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден."));
-        User friend = userStorage.getUserById(friendId)
-                                 .orElseThrow(() -> new NotFoundException("Друг с id = " + friendId + " не найден."));
-        user.getFriends().remove(friendId);
-        friend.getFriends().remove(userId);
+    public UserDto update(User newUser) {
+        if (newUser.getId() == null) {
+            throw new ValidationException("Id должен быть указан");
+        }
+        if (findById(newUser.getId()) == null) {
+            throw new NotFoundException(String.format("Пользователь с id=%d не найден", newUser.getId()));
+        }
+        checkName(newUser);
+        return UserMapper.mapToUserDto(userRepository.update(newUser));
     }
 
-    public List<User> getFriends(Long id) {
-        return userStorage.getFriends(id);
+    public List<UserDto> getFriends(Long receiver) {
+        if (userRepository.findById(receiver).isEmpty()) {
+            throw new NotFoundException(String.format("Пользователь с id=%d не найден", receiver));
+        }
+        return userRepository.getFriends(receiver)
+                             .stream()
+                             .map(UserMapper::mapToUserDto)
+                             .toList();
     }
 
-    public List<User> getMutualFriends(Long id, Long otherId) {
-        User user = userStorage.getUserById(id)
-                               .orElseThrow(() -> new NotFoundException("Пользователь с id = " + id + " не найден."));
-        User otherUser = userStorage.getUserById(otherId)
-                                    .orElseThrow(() -> new NotFoundException("Пользователь с id = " + otherId + " не найден."));
+    public void addFriend(Long sender, Long receiver) {
+        userRepository.findById(sender)
+                      .orElseThrow(() -> new NotFoundException("Пользователь с id=" + sender + " не найден"));
 
-        return user.getFriends().stream()
-                   .filter(otherUser.getFriends()::contains)
-                   .map(userStorage::getUserById)
-                   .flatMap(Optional::stream)
-                   .toList();
+        userRepository.findById(receiver)
+                      .orElseThrow(() -> new NotFoundException("Пользователь с id=" + receiver + " не найден"));
+
+        // Add friendship
+        friendshipRepository.addFriend(sender, receiver);
     }
 
+    public void deleteFriend(Long sender, Long receiver) {
+        userRepository.findById(sender)
+                      .orElseThrow(() -> new NotFoundException("Пользователь с id=" + sender + " не найден"));
+
+        userRepository.findById(receiver)
+                      .orElseThrow(() -> new NotFoundException("Пользователь с id=" + receiver + " не найден"));
+
+        friendshipRepository.deleteFriend(sender, receiver);
+    }
+
+    public List<UserDto> getCommonFriends(Long userId, Long friendId) {
+        return userRepository.getCommonFriends(userId, friendId)
+                             .stream()
+                             .map(UserMapper::mapToUserDto)
+                             .toList();
+    }
+
+    private void checkName(User user) {
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
+    }
 }

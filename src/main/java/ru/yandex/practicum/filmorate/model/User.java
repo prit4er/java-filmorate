@@ -11,11 +11,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
 
 @Data
-@Builder (toBuilder = true)
+@Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
 public class User {
@@ -41,27 +39,4 @@ public class User {
     @Past(message = "Дата рождения не может быть в будущем")
     @NotNull
     private LocalDate birthday;
-
-    private Set<Long> friends = new HashSet<>();
-
-    public void removeFromFriends(Long id) {
-        friends.remove(id);
-    }
-
-    public boolean isFriend(Long id) {
-        return friends.contains(id);
-    }
-
-
-    @Override
-    public String toString() {
-        return "User{" +
-                "id=" + id +
-                ", email='" + email + '\'' +
-                ", login='" + login + '\'' +
-                ", name='" + name + '\'' +
-                ", birthday=" + birthday +
-                ", friends=" + friends +
-                '}';
-    }
 }

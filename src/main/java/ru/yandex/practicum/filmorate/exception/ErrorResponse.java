@@ -9,10 +9,7 @@ import lombok.Setter;
 @Data
 public class ErrorResponse {
 
-    private String errorMessage;
-
-    public ErrorResponse(String errorMessage) {
-        this.errorMessage = errorMessage;
-    }
+    private final String error;
+    private final String message;
 
 }

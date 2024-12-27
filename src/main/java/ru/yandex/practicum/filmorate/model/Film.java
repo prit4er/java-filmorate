@@ -4,10 +4,12 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -16,10 +18,11 @@ import java.util.Set;
 // 	•	@NotNull обеспечивает проверку на этапе обработки запросов.
 
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Film implements Comparable<Film> {
+@EqualsAndHashCode(of = {"name"})
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class Film {
 
     private Long id;
 
@@ -39,20 +42,10 @@ public class Film implements Comparable<Film> {
     @Min(1)
     private Integer duration;
 
-    private Set<Long> likes = new HashSet<>();
+    private Set<Like> likes = new HashSet<>();
 
-    @Override
-    public String toString() {
-        return "Film{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", releaseDate=" + releaseDate +
-                ", duration=" + duration +
-                '}';
-    }
+    @NotNull(message = "MPA рейтинг не может быть пустым")
+    MpaRating mpaRating;
 
-    public int compareTo(Film obj) {
-        return obj.getLikes().size() - this.getLikes().size();
-    }
+    Set<Genre> genres = new HashSet<>();
 }

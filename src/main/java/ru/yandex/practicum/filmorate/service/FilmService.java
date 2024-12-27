@@ -1,15 +1,19 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Like;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FilmRepository;
 import ru.yandex.practicum.filmorate.storage.GenreRepository;
 import ru.yandex.practicum.filmorate.storage.LikeRepository;
+import ru.yandex.practicum.filmorate.storage.UserRepository;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -20,17 +24,13 @@ import java.util.Optional;
 import java.util.Set;
 
 @Service
+@RequiredArgsConstructor
 public class FilmService {
 
     private final FilmRepository filmRepository;
     private final LikeRepository likeRepository;
     private final GenreRepository genreRepository;
-
-    public FilmService(FilmRepository filmRepository, LikeRepository likeRepository, GenreRepository genreRepository) {
-        this.filmRepository = filmRepository;
-        this.likeRepository = likeRepository;
-        this.genreRepository = genreRepository;
-    }
+    private final UserRepository userRepository;
 
     public List<FilmDto> findAll() {
         List<Film> films = filmRepository.findAll();
@@ -71,6 +71,15 @@ public class FilmService {
     }
 
     public void addLike(Long filmId, Long userId) {
+        // Проверка существования фильма
+        Film film = filmRepository.findById(filmId)
+                                  .orElseThrow(() -> new NotFoundException("Film with id " + filmId + " not found"));
+
+        // Проверка существования пользователя
+        User user = userRepository.findById(userId)
+                                  .orElseThrow(() -> new NotFoundException("User with id " + userId + " not found"));
+
+        // Сохраняем лайк в репозитории лайков (для учета)
         likeRepository.addLike(filmId, userId);
     }
 

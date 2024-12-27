@@ -11,23 +11,15 @@ import java.util.Optional;
 @Repository
 public class MpaRatingRepository extends BaseRepository<MpaRating> {
 
-    private static final String FIND_ALL_QUERY =
-            "SELECT * " +
-                    "FROM ratings";
-    private static final String FIND_BY_ID_QUERY =
-            "SELECT * " +
-                    "FROM ratings " +
-                    "WHERE id = ?";
-
     public MpaRatingRepository(JdbcTemplate jdbc, RowMapper<MpaRating> mapper) {
         super(jdbc, mapper, MpaRating.class);
     }
 
     public List<MpaRating> findAll() {
-        return findMany(FIND_ALL_QUERY);
+        return findMany("SELECT * FROM ratings");
     }
 
     public Optional<MpaRating> findById(Long id) {
-        return findOne(FIND_BY_ID_QUERY, id);
+        return findOne("SELECT * FROM ratings WHERE id = ?", id);
     }
 }

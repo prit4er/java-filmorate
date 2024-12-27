@@ -11,44 +11,40 @@ import java.util.List;
 @Repository
 public class LikeRepository extends BaseRepository<Like> {
 
-    private static final String INSERT_QUERY =
-            "INSERT INTO likes(film_id, user_id) " +
-                    "VALUES (?, ?)";
-    private static final String CHECK_REQUEST_QUERY =
-            "SELECT COUNT(*) " +
-                    "FROM likes " +
-                    "WHERE film_id = ? AND user_id = ?";
-    private static final String DELETE_QUERY =
-            "DELETE FROM likes " +
-                    "WHERE film_id = ? AND user_id = ?";
-    private static final String FIND_ALL_BY_FILM_ID_QUERY =
-            "SELECT * " +
-                    "FROM likes " +
-                    "WHERE film_id = ?";
-
     public LikeRepository(JdbcTemplate jdbc, RowMapper<Like> mapper) {
         super(jdbc, mapper, Like.class);
     }
 
     public void addLike(Long filmId, Long userId) {
-        Integer count = jdbc.queryForObject(CHECK_REQUEST_QUERY, Integer.class, filmId, userId);
+        Integer count = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM likes WHERE film_id = ? AND user_id = ?",
+                Integer.class, filmId, userId
+        );
         if (count != 0) {
-            throw new DuplicatedDataException(String.format("Фильму с id = %d, уже поставлен лайк пользователем " +
-                                                                    "с id = %d", filmId, userId));
+            throw new DuplicatedDataException(
+                    String.format("Фильму с id = %d, уже поставлен лайк пользователем с id = %d", filmId, userId)
+            );
         }
-        insert(INSERT_QUERY, filmId, userId);
+        insert(
+                "INSERT INTO likes(film_id, user_id) VALUES (?, ?)",
+                filmId, userId
+        );
     }
 
     public void deleteLike(Long filmId, Long userId) {
-        Integer count = jdbc.queryForObject(CHECK_REQUEST_QUERY, Integer.class, filmId, userId);
+        Integer count = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM likes WHERE film_id = ? AND user_id = ?",
+                Integer.class, filmId, userId
+        );
         if (count == 0) {
-            throw new DuplicatedDataException(String.format("Фильму с id = %d, еще не поставлен поставлен лайк " +
-                                                                    "пользователем с id = %d", filmId, userId));
+            throw new DuplicatedDataException(
+                    String.format("Фильму с id = %d, еще не поставлен лайк пользователем с id = %d", filmId, userId)
+            );
         }
-        delete(DELETE_QUERY, filmId, userId);
+        delete("DELETE FROM likes WHERE film_id = ? AND user_id = ?", filmId, userId);
     }
 
     public List<Like> findLikesByFilmId(Long filmId) {
-        return findMany(FIND_ALL_BY_FILM_ID_QUERY, filmId);
+        return findMany("SELECT * FROM likes WHERE film_id = ?", filmId);
     }
 }

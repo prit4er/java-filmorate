@@ -4,12 +4,10 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -21,7 +19,6 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(of = {"name"})
-@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Film {
 
     private Long id;
@@ -45,7 +42,7 @@ public class Film {
     private Set<Like> likes = new HashSet<>();
 
     @NotNull(message = "MPA рейтинг не может быть пустым")
-    MpaRating mpaRating;
+    private MpaRating mpaRating;
 
-    Set<Genre> genres = new HashSet<>();
+    private Set<Genre> genres = new HashSet<>();
 }

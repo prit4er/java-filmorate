@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -12,15 +13,11 @@ import ru.yandex.practicum.filmorate.storage.UserRepository;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
     private final FriendshipRepository friendshipRepository;
-
-    public UserService(UserRepository userRepository, FriendshipRepository friendshipRepository) {
-        this.userRepository = userRepository;
-        this.friendshipRepository = friendshipRepository;
-    }
 
     public List<UserDto> findAll() {
         return userRepository.findAll()
@@ -65,10 +62,23 @@ public class UserService {
     }
 
     public void addFriend(Long sender, Long receiver) {
+        userRepository.findById(sender)
+                      .orElseThrow(() -> new NotFoundException("Пользователь с id=" + sender + " не найден"));
+
+        userRepository.findById(receiver)
+                      .orElseThrow(() -> new NotFoundException("Пользователь с id=" + receiver + " не найден"));
+
+        // Add friendship
         friendshipRepository.addFriend(sender, receiver);
     }
 
     public void deleteFriend(Long sender, Long receiver) {
+        userRepository.findById(sender)
+                      .orElseThrow(() -> new NotFoundException("Пользователь с id=" + sender + " не найден"));
+
+        userRepository.findById(receiver)
+                      .orElseThrow(() -> new NotFoundException("Пользователь с id=" + receiver + " не найден"));
+
         friendshipRepository.deleteFriend(sender, receiver);
     }
 

@@ -9,9 +9,9 @@ import java.time.LocalDate;
 public class UserDto {
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    Long id;
-    String email;
-    String name;
-    String login;
-    LocalDate birthday;
+    private Long id;
+    private String email;
+    private String name;
+    private String login;
+    private LocalDate birthday;
 }

@@ -22,44 +22,44 @@ import java.util.Optional;
 public class FilmController {
 
     // Константы маршрутов
-    public static final String FILMS_PATH = "/films";
-    public static final String FILMS_ID_PATH = "/films/{id}";
-    public static final String LIKE_PATH = "/films/{id}/like/{user-id}";
-    public static final String POPULAR_PATH = "/films/popular";
+    private final String filmsPath = "/films";
+    private final String filmsIdPath = "/films/{id}";
+    private final String likePath = "/films/{id}/like/{user-id}";
+    private final String popularPath = "/films/popular";
 
     private final FilmService filmService;
 
-    @GetMapping(FILMS_PATH)
+    @GetMapping(filmsPath)
     public List<FilmDto> findAll() {
         return filmService.findAll();
     }
 
-    @GetMapping(FILMS_ID_PATH)
+    @GetMapping(filmsIdPath)
     public Optional<FilmDto> findFilm(@PathVariable Long id) {
         return filmService.findById(id);
     }
 
-    @PostMapping(FILMS_PATH)
+    @PostMapping(filmsPath)
     public FilmDto create(@Valid @RequestBody FilmDto filmDto) {
         return filmService.create(FilmMapper.mapToFilm(filmDto));
     }
 
-    @PutMapping(FILMS_PATH)
+    @PutMapping(filmsPath)
     public FilmDto update(@Valid @RequestBody FilmDto filmDto) {
         return filmService.update(FilmMapper.mapToFilm(filmDto));
     }
 
-    @PutMapping(LIKE_PATH)
+    @PutMapping(likePath)
     public void addLike(@PathVariable Long id, @PathVariable("user-id") Long userId) {
         filmService.addLike(id, userId);
     }
 
-    @DeleteMapping(LIKE_PATH)
+    @DeleteMapping(likePath)
     public void deleteLike(@PathVariable Long id, @PathVariable("user-id") Long userId) {
         filmService.deleteLike(id, userId);
     }
 
-    @GetMapping(POPULAR_PATH)
+    @GetMapping(popularPath)
     public List<FilmDto> getPopularFilms(@RequestParam(defaultValue = "10") int count) {
         return filmService.getPopularFilms(count);
     }

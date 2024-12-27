@@ -13,17 +13,17 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MpaRatingController {
 
-    private final String MPA_PATH = "/mpa";
-    private final String MPA_ID_PATH = "/mpa/{id}";
+    private final String mpaPath = "/mpa";
+    private final String mpaIdPath = "/mpa/{id}";
 
     private final MpaRatingService mpaRatingService;
 
-    @GetMapping(MPA_PATH)
+    @GetMapping(mpaPath)
     public List<MpaRatingDto> findAll() {
         return mpaRatingService.findAll();
     }
 
-    @GetMapping(MPA_ID_PATH)
+    @GetMapping(mpaIdPath)
     public MpaRatingDto findFilm(@PathVariable Long id) {
         return mpaRatingService.findById(id);
     }

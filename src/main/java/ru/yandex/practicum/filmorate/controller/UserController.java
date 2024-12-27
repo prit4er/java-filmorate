@@ -19,50 +19,50 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserController {
 
-    public static final String USERS_PATH = "/users";
-    public static final String USERS_ID_PATH = "/users/{id}";
-    public static final String FRIENDS_ID_PATH = "/users/{id}/friends/{friend-id}";
-    public static final String FRIENDS_PATH = "/users/{id}/friends";
-    public static final String COMMON_FRIENDS_PATH = "/users/{id}/friends/common/{other-id}";
+    private final String usersPath = "/users";
+    private final String usersIdPath = "/users/{id}";
+    private final String friendsIdPath = "/users/{id}/friends/{friend-id}";
+    private final String friendsPath = "/users/{id}/friends";
+    private final String commonFriendsPath = "/users/{id}/friends/common/{other-id}";
 
     private final UserService userService;
 
-    @GetMapping(USERS_PATH)
+    @GetMapping(usersPath)
     public List<UserDto> findAll() {
         return userService.findAll();
     }
 
-    @GetMapping(USERS_ID_PATH)
+    @GetMapping(usersIdPath)
     public UserDto findUser(@PathVariable Long id) {
         return userService.findById(id);
     }
 
-    @PostMapping(USERS_PATH)
+    @PostMapping(usersPath)
     public UserDto create(@Valid @RequestBody User user) {
         return userService.create(user);
     }
 
-    @PutMapping(USERS_PATH)
+    @PutMapping(usersPath)
     public UserDto update(@Valid @RequestBody User user) {
         return userService.update(user);
     }
 
-    @PutMapping(FRIENDS_ID_PATH)
+    @PutMapping(friendsIdPath)
     public void addFriend(@PathVariable Long id, @PathVariable("friend-id") Long friendId) {
         userService.addFriend(friendId, id);
     }
 
-    @DeleteMapping(FRIENDS_ID_PATH)
+    @DeleteMapping(friendsIdPath)
     public void deleteFriend(@PathVariable Long id, @PathVariable("friend-id") Long friendId) {
         userService.deleteFriend(friendId, id);
     }
 
-    @GetMapping(FRIENDS_PATH)
+    @GetMapping(friendsPath)
     public List<UserDto> getFriends(@PathVariable Long id) {
         return userService.getFriends(id);
     }
 
-    @GetMapping(COMMON_FRIENDS_PATH)
+    @GetMapping(commonFriendsPath)
     public List<UserDto> getCommonFriends(@PathVariable Long id, @PathVariable("other-id") Long otherId) {
         return userService.getCommonFriends(id, otherId);
     }
